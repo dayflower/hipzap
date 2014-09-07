@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
+require 'optparse'
+require 'hipzap'
+
+begin
+  params = YAML.load_file('hipzap.conf')
+rescue Errno::ENOENT
+  params = {}
+end
+
+OptionParser.new do |parser|
+  parser.on('--debug', 'show debug log') { |v| params['debug'] = v }
+  parser.parse!(ARGV)
+end
+
+config = HipZap::Config.new(params)
+HipZap::Colorful.new(config).run
