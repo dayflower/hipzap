@@ -64,12 +64,12 @@ module HipZap
 
     def setup
       if @config.debug
-        sss = lambda { |s| show_sending_stream(s) }
+        ss_out = lambda { |s| puts render_sending_stream(s) }
 
         Xrc::Connection.class_eval do
-          @@sss = sss
+          @@ss_out = ss_out
           def write(object)
-            @@sss.call(object.to_s)
+            @@ss_out.call(object.to_s)
             socket << object.to_s
           end
         end
@@ -98,7 +98,7 @@ module HipZap
 
     def on_event(element)
       if @config.debug
-        show_received_stream(element)
+        puts render_received_stream(element)
       end
 
       if element.name == "presence"
@@ -224,12 +224,12 @@ module HipZap
       puts [ render_timestamp(time), *tokens ].join(" ")
     end
 
-    def show_sending_stream(str)
-      puts ">>> " + str
+    def render_sending_stream(str)
+      ">>> " + str
     end
 
-    def show_received_stream(element)
-      puts "<<< " + element.to_s
+    def render_received_stream(element)
+      "<<< " + element.to_s
     end
 
     def render_room_message(params)
@@ -342,12 +342,12 @@ module HipZap
       return ANSI.blue { super(time) }
     end
 
-    def show_sending_stream(str)
-      puts ANSI.yellow { str }
+    def render_sending_stream(str)
+      ANSI.yellow { str }
     end
 
-    def show_received_stream(element)
-      puts ANSI.blue { element.to_s }
+    def render_received_stream(element)
+      ANSI.blue { element.to_s }
     end
   end
 end
