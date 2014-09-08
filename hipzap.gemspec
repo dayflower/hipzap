@@ -1,7 +1,7 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'hipzap'
+require 'hipzap/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "hipzap"
@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
     "Rakefile",
     "hipzap.example.conf",
     "lib/hipzap.rb",
+    "lib/hipzap/version.rb",
     "bin/hipzap",
   ]
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }

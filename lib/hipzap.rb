@@ -3,10 +3,9 @@ require 'time'
 require 'date'
 require 'xrc'
 require 'ansi/code'
+require 'hipzap/version'
 
 module HipZap
-  VERSION = "0.0.1"
-
   class Config < OpenStruct
     def initialize(config)
       config = config.dup
