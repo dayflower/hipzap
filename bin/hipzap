@@ -4,6 +4,8 @@ require 'yaml'
 require 'optparse'
 require 'hipzap'
 
+CONFIG_FILES = [ 'hipzap.conf', '.hipzap.conf', '~/.hipzap.conf', ]
+
 config_file = nil
 opt_params = {}
 opt = OptionParser.new do |opt|
@@ -29,10 +31,18 @@ if config_file
     exit 1
   end
 else
-  begin
-    params = YAML.load_file('hipzap.conf')
-  rescue Errno::ENOENT
-    params = {}
+  CONFIG_FILES.each do |filename|
+    begin
+      params = YAML.load_file(File.expand_path(filename))
+      break
+    rescue Errno::ENOENT
+      next
+    end
+  end
+
+  unless params
+    STDERR.puts "Error: config file not found"
+    STDERR.puts opt
   end
 end
 
