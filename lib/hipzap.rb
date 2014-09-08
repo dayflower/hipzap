@@ -35,9 +35,10 @@ module HipZap
     end
   end
 
-  class Standard
-    def initialize(config)
+  class Engine
+    def initialize(config: config, renderer: renderer = Renderer::Standard.new(config))
       @config = config
+      @renderer = renderer
 
       @room_name = {}
 
@@ -64,7 +65,7 @@ module HipZap
 
     def setup
       if @config.debug
-        ss_out = lambda { |s| puts render_sending_stream(s) }
+        ss_out = lambda { |s| puts @renderer.render_sending_stream(s) }
 
         Xrc::Connection.class_eval do
           @@ss_out = ss_out
@@ -98,7 +99,7 @@ module HipZap
 
     def on_event(element)
       if @config.debug
-        puts render_received_stream(element)
+        puts @renderer.render_received_stream(element)
       end
 
       if element.name == "presence"
@@ -123,7 +124,7 @@ module HipZap
         stamp = message.element.elements['delay'].attribute('stamp').to_s.split(/\s/, 2)[0]
         time = Time.iso8601(stamp)
 
-        show_log *render_room_message(
+        show_log *@renderer.render_room_message(
                    room_name: room_name,
                    body: message.body,
                    sender_nick: sender_nick,
@@ -133,7 +134,7 @@ module HipZap
       else
         time = Time.now
 
-        show_log *render_room_message(
+        show_log *@renderer.render_room_message(
                    room_name: room_name,
                    body: message.body,
                    sender_nick: sender_nick,
@@ -153,7 +154,7 @@ module HipZap
 
         sender_jid = normalize_jid(delay.attribute('from_jid').to_s)
 
-        show_log *render_dm(
+        show_log *@renderer.render_dm(
                    room_name: room_name,
                    body: message.body,
                    sender_name: @client.users[sender_jid].mention_name,
@@ -163,7 +164,7 @@ module HipZap
       else
         time = Time.now
 
-        show_log *render_dm(
+        show_log *@renderer.render_dm(
                    room_name: room_name,
                    body: message.body,
                    sender_name: from.mention_name,
@@ -188,7 +189,7 @@ module HipZap
 
         sender_jid = normalize_jid(delay.attribute('from_jid').to_s)
 
-        show_log *render_topic(
+        show_log *@renderer.render_topic(
                    room_name: room_name,
                    topic: topic,
                    sender_name: @client.users[sender_jid].name,
@@ -197,7 +198,7 @@ module HipZap
       else
         time = Time.now
 
-        show_log *render_topic(
+        show_log *@renderer.render_topic(
                    room_name: room_name,
                    topic: topic,
                  ),
@@ -221,7 +222,15 @@ module HipZap
 
     def show_log(*tokens, time: Time.now)
       time = time.localtime
-      puts [ render_timestamp(time), *tokens ].join(" ")
+      puts [ @renderer.render_timestamp(time), *tokens ].join(" ")
+    end
+  end
+
+  module Renderer; end
+
+  class Renderer::Standard
+    def initialize(config)
+      @config = config
     end
 
     def render_sending_stream(str)
@@ -275,7 +284,7 @@ module HipZap
     end
   end
 
-  class Colorful < Standard
+  class Renderer::Colorful < Renderer::Standard
     def initialize(config)
       super
 

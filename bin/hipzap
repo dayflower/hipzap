@@ -48,4 +48,4 @@ end
 
 config = HipZap::Config.new(params.merge(opt_params))
 
-HipZap::Colorful.new(config).run
+HipZap::Engine.new(config: config, renderer: HipZap::Renderer::Colorful.new(config)).run

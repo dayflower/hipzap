@@ -64,4 +64,4 @@ end
 
 config['password'] = pw.password
 
-HipZap::Colorful.new(config).run
+HipZap::Engine.new(config: config, renderer: HipZap::Renderer::Colorful.new(config)).run
