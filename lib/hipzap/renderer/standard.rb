@@ -1,6 +1,8 @@
 require 'time'
 require 'date'
 
+module HipZap; end
+
 module HipZap::Renderer
   class Standard
     def initialize(config)

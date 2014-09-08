@@ -2,6 +2,8 @@ require 'time'
 require 'date'
 require 'ansi/code'
 
+module HipZap; end
+
 module HipZap::Renderer
   class Colorful < Standard
     def initialize(config)
