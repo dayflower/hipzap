@@ -181,7 +181,28 @@ module HipZap
       room_jid = normalize_jid(message.from)
       room_name = @room_name[room_jid] || room_jid
 
-      show_log *render_topic( room_name: room_name, topic: topic )
+      if message.delayed?
+        delay = message.element.elements['delay']
+        stamp = delay.attribute('stamp').to_s.split(/\s/, 2)[0]
+        time = Time.iso8601(stamp)
+
+        sender_jid = normalize_jid(delay.attribute('from_jid').to_s)
+
+        show_log *render_topic(
+                   room_name: room_name,
+                   topic: topic,
+                   sender_name: @client.users[sender_jid].name,
+                 ),
+                 time: time
+      else
+        time = Time.now
+
+        show_log *render_topic(
+                   room_name: room_name,
+                   topic: topic,
+                 ),
+                 time: time
+      end
     end
 
     def on_invite(message)
@@ -226,7 +247,11 @@ module HipZap
     end
 
     def render_topic(params)
-      [ render_room_name(room_name), "topic:", params[:topic] ]
+      if params[:sender_name]
+        [ render_room_name(params[:room_name]), params[:sender_name], "set", "topic:", params[:topic] ]
+      else
+        [ render_room_name(params[:room_name]), "topic:", params[:topic] ]
+      end
     end
 
     def render_room_name(room_name)
@@ -295,7 +320,14 @@ module HipZap
     end
 
     def render_topic(params)
-      [ render_room_name(params[:room_name]), "topic:", ANSI.green { params[:topic] } ]
+      room_name = render_room_name(params[:room_name])
+      topic = ANSI.green { params[:topic] }
+
+      if params[:sender_name]
+        [ room_name, ANSI.cyan { ANSI.underline { params[:sender_name] } }, "set", "topic:", topic ]
+      else
+        [ room_name, "topic:", topic ]
+      end
     end
 
     def render_room_name(room_name)
