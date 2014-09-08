@@ -1,24 +1,24 @@
 # HipZap
 
-TODO: Write a gem description
+Unified stream viewer for HipChat messages
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-    gem 'hipzap'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
+Install it as:
 
     $ gem install hipzap
 
+Or you can localize your installation using Bundler (with following Gemfile) of course.
+
+    gem 'hipzap'
+
 ## Usage
 
-TODO: Write usage instructions here
+    $ hipzap [options]
+
+## Configuration
+
+TODO
 
 ## Contributing
 
