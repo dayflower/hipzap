@@ -4,16 +4,48 @@ require 'yaml'
 require 'optparse'
 require 'hipzap'
 
+CONFIG_FILES = [ 'hipzap.conf', '.hipzap.conf', '~/.hipzap.conf', ]
+
+config_file = nil
+opt_params = {}
+opt = OptionParser.new do |opt|
+  opt.version = HipZap::VERSION
+  opt.on('-f', '--config=FILE', 'specify config file') { |v| config_file = v }
+  opt.on('--debug', 'show debug log') { |v| opt_params['debug'] = v }
+end
+
 begin
-  params = YAML.load_file('hipzap.conf')
-rescue Errno::ENOENT
-  params = {}
+  opt.parse!(ARGV)
+rescue OptionParser::ParseError => e
+  STDERR.puts "Error: #{e}"
+  STDERR.puts opt
+  exit 1
 end
 
-OptionParser.new do |parser|
-  parser.on('--debug', 'show debug log') { |v| params['debug'] = v }
-  parser.parse!(ARGV)
+if config_file
+  begin
+    params = YAML.load_file(config_file)
+  rescue Errno::ENOENT
+    STDERR.puts "Error: config file '#{config_file}' not found"
+    STDERR.puts opt
+    exit 1
+  end
+else
+  CONFIG_FILES.each do |filename|
+    begin
+      params = YAML.load_file(File.expand_path(filename))
+      break
+    rescue Errno::ENOENT
+      next
+    end
+  end
+
+  unless params
+    STDERR.puts "Error: config file not found"
+    STDERR.puts opt
+  end
 end
 
-config = HipZap::Config.new(params)
+config = HipZap::Config.new(params.merge(opt_params))
+
 HipZap::Colorful.new(config).run
