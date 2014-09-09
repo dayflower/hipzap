@@ -13,7 +13,7 @@ module HipZap
       xrc_params = {
         jid: @config.user_jid,
         nickname: @config.nickname,
-        password: @config.delete_field(:password),
+        password: @config[:password] ? @config.delete_field(:password) : nil,
         room_jid: @config.room_jid_string,
       }
 
