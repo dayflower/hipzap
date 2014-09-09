@@ -6,20 +6,17 @@ require 'hipzap'
 
 CONFIG_FILES = [ 'hipzap.conf', '.hipzap.conf', '~/.hipzap.conf', ]
 
+# only acquire config file option
 config_file = nil
-opt_params = {}
-opt = OptionParser.new do |opt|
-  opt.version = HipZap::VERSION
+OptionParser.new do |opt|
   opt.on('-f', '--config=FILE', 'specify config file') { |v| config_file = v }
-  opt.on('--debug', 'show debug log') { |v| opt_params['debug'] = v }
-end
-
-begin
-  opt.parse!(ARGV)
-rescue OptionParser::ParseError => e
-  STDERR.puts "Error: #{e}"
-  STDERR.puts opt
-  exit 1
+  opt.on('-v', '--version')
+  opt.on('-h', '--help')
+  begin
+    opt.parse ARGV
+  rescue OptionParser::InvalidOption
+    retry
+  end
 end
 
 if config_file
@@ -27,7 +24,6 @@ if config_file
     params = YAML.load_file(config_file)
   rescue Errno::ENOENT
     STDERR.puts "Error: config file '#{config_file}' not found"
-    STDERR.puts opt
     exit 1
   end
 else
@@ -42,10 +38,23 @@ else
 
   unless params
     STDERR.puts "Error: config file not found"
-    STDERR.puts opt
   end
 end
 
-config = HipZap::Config.new(params.merge(opt_params))
+# real command line parse
+opt = OptionParser.new
+opt.version = HipZap::VERSION
+opt.on('-f', '--config=FILE', 'specify config file')  # do nothing in this phase
+opt.on('--debug', 'show debug log') { |v| params['debug'] = v }
+
+begin
+  opt.parse!(ARGV)
+rescue OptionParser::ParseError => e
+  STDERR.puts "Error: #{e}"
+  STDERR.puts opt
+  exit 1
+end
+
+config = HipZap::Config.new(params)
 
 HipZap::Engine.new(config: config, renderer: HipZap::Renderer::Colorful.new(config)).run
