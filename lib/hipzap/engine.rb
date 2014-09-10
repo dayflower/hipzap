@@ -85,6 +85,17 @@ module HipZap
           room_name = element.elements["//name/text()"]
           if ! room_name.nil? && ! room_name.empty?
             @room_name[room_jid] = room_name
+          else
+            room_name = @room_name[room_jid] || room_jid
+          end
+        end
+
+        error_text = element.elements["//error/text/text()"]
+        if ! error_text.nil? && ! error_text.empty?
+          if room_name
+            show_log "<#{room_name}>", "Error:", error_text
+          else
+            show_log "Error:", error_text
           end
         end
       end
