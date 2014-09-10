@@ -1,4 +1,5 @@
 require 'time'
+require 'yaml'
 require 'xrc'
 require 'hipzap/renderer/standard'
 
@@ -26,6 +27,12 @@ module HipZap
 
     def run
       setup
+
+      Signal.trap(:USR1) {
+        dump_rooms
+        STDERR.puts "Room list dumped."
+      }
+
       @client.connect
     end
 
@@ -191,6 +198,15 @@ module HipZap
     def show_log(*tokens, time: Time.now)
       time = time.localtime
       puts [ @renderer.render_timestamp(time), *tokens ].join(" ")
+    end
+
+    def dump_rooms(filename = 'room_list.yml')
+      trailing = %r{ @ #{Regexp.escape(@config.muc_domain)} \z }x;
+      rooms = @room_name.keys.map { |jid| jid.sub(trailing, '') }.sort
+
+      File.open(filename, 'w') { |f|
+        f.write(YAML.dump({ 'rooms' =>  rooms }, header: false))
+      }
     end
   end
 end
