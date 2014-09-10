@@ -13,10 +13,14 @@ module HipZap::Renderer
     end
 
     def render_room_message(params)
-      if @hl_re && params[:body] =~ @hl_re
-        body = ANSI.on_yellow { params[:body] }
+      if params[:replay] && @config.shade_playback
+        body = ANSI.white { params[:body] }
       else
         body = params[:body]
+      end
+
+      if @hl_re && params[:body] =~ @hl_re
+        body = ANSI.on_yellow { body }
       end
 
       [
