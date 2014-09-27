@@ -107,10 +107,12 @@ module HipZap
 
     def on_connected
       if @config.auto_join
-        @client.hipchat_startup(@config.muc_domain, false) do |element|
+        muc_domain = @config.muc_domain
+        @client.hipchat_startup(muc_domain, false) do |element|
           joined_rooms = element.elements["//preferences/autoJoin"]
           joined_rooms.each do |room|
             room_jid = room.attributes['jid']
+            next unless room_jid.end_with?('@' + muc_domain)
             @client.join(room_jid)
             @room_name[room_jid] = room.attributes['name']
           end
