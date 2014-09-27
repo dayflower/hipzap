@@ -197,7 +197,7 @@ module HipZap
       @room_name[room_jid] = message.room_name
       show_log "invited to #{message.room_name}"
 
-      if @config.auto_join
+      if @config.join_on_invite
         @client.join(room_jid)
       end
     end
