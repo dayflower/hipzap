@@ -15,7 +15,6 @@ OptionParser.new do |opt|
   begin
     opt.parse ARGV
   rescue OptionParser::InvalidOption
-    retry
   end
 end
 
