@@ -3,6 +3,33 @@ require 'yaml'
 require 'xrc'
 require 'hipzap/renderer/standard'
 
+module Xrc::Client::OnConnectedExtension
+  def on_connected(&block)
+    @on_connected_block = block
+  end
+
+  def on_connection_established
+    super
+    (@on_connected_block || ->(element) {}).call
+  end
+end
+
+module Xrc::Client::HipChatStartupExtension
+  def hipchat_startup(muc_domain, auto_join = false, &block)
+    iq = REXML::Element.new('iq')
+    iq.attributes['type'] = 'get'
+    iq.attributes['to'] = muc_domain
+    query = REXML::Element.new('query')
+    query.add_namespace('http://hipchat.com/protocol/startup')
+    if auto_join
+      query.attributes['send_auto_join_user_presences'] = true
+    end
+    iq.add(query)
+
+    post(iq, &block)
+  end
+end
+
 module HipZap
   class Engine
     def initialize(config: config, renderer: renderer = Renderer::Standard.new(config))
@@ -23,6 +50,8 @@ module HipZap
       end
 
       @client = Xrc::Client.new(xrc_params)
+      @client.extend Xrc::Client::OnConnectedExtension
+      @client.extend Xrc::Client::HipChatStartupExtension
     end
 
     def run
@@ -51,6 +80,10 @@ module HipZap
         end
       end
 
+      @client.on_connected do
+        on_connected
+      end
+
       @client.on_event do |element|
         on_event(element)
       end
@@ -69,6 +102,19 @@ module HipZap
 
       @client.on_invite do |message|
         on_invite(message)
+      end
+    end
+
+    def on_connected
+      if @config.auto_join
+        @client.hipchat_startup(@config.muc_domain, false) do |element|
+          joined_rooms = element.elements["//preferences/autoJoin"]
+          joined_rooms.each do |room|
+            room_jid = room.attributes['jid']
+            @client.join(room_jid)
+            @room_name[room_jid] = room.attributes['name']
+          end
+        end
       end
     end
 
