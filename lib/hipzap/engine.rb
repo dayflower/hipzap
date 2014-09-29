@@ -3,17 +3,6 @@ require 'yaml'
 require 'xrc'
 require 'hipzap/renderer/standard'
 
-module Xrc::Client::OnConnectedExtension
-  def on_connected(&block)
-    @on_connected_block = block
-  end
-
-  def on_connection_established
-    super
-    (@on_connected_block || ->(element) {}).call
-  end
-end
-
 module Xrc::Client::HipChatStartupExtension
   def hipchat_startup(muc_domain, auto_join = false, &block)
     iq = REXML::Element.new('iq')
@@ -80,8 +69,8 @@ module HipZap
         end
       end
 
-      @client.on_connected do
-        on_connected
+      @client.on_connection_established do
+        on_connection_established
       end
 
       @client.on_event do |element|
@@ -105,7 +94,7 @@ module HipZap
       end
     end
 
-    def on_connected
+    def on_connection_established
       if @config.auto_join
         muc_domain = @config.muc_domain
         @client.hipchat_startup(muc_domain, false) do |element|
